@@ -37,8 +37,7 @@ class Html
     public const HTML_DATE_FORMAT = 'Y-m-d';
     public const HTML_TIME_FORMAT = 'H:i:s';
 
-    /** @var \Illuminate\Http\Request */
-    protected $request;
+    protected ?Request $request;
 
     /** @var \ArrayAccess|array */
     protected $model;
@@ -46,7 +45,7 @@ class Html
     /** @var \ArrayAccess|array */
     protected $defaults;
 
-    public function __construct(Request $request)
+    public function __construct(?Request $request = null)
     {
         $this->request = $request;
     }
@@ -541,7 +540,7 @@ class Html
         return $this
             ->hidden()
             ->name('_token')
-            ->value($this->request->session()->token());
+            ->value(($this->request ?? request())->session()->token());
     }
 
     /**
@@ -654,7 +653,9 @@ class Html
         // If there's no default value provided, the html builder currently
         // has a model assigned and there aren't old input items,
         // try to retrieve a value from the model.
-        if (is_null($value) && $this->model && empty($this->request->old())) {
+        $request = $this->request ?? request();
+
+        if (is_null($value) && $this->model && empty($request->old())) {
             $value = ($value = data_get($this->model, $name)) instanceof UnitEnum
                 ? $this->getEnumValue($value)
                 : $value;
